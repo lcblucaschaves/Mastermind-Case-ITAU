@@ -1,7 +1,7 @@
 import random
 import uuid
 from typing import List
-from repository import GameRepository
+from repository.repository import GameRepository
 
 class GameService:
     def __init__(self, repository: GameRepository):
@@ -16,7 +16,10 @@ class GameService:
             'max_attempts': 10,
             'status': 'active'
         }
-        return self.repo.save_game(new_game)
+
+        self.repo.save_game(new_game)
+        new_game.pop('secret_code')  # Remove o código secreto para a resposta pública
+        return new_game
 
     def process_guess(self, game_id: str, guess_colors: List[str]):
         game = self.repo.get_game(game_id)
