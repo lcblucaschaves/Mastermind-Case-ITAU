@@ -1,12 +1,33 @@
-from fastapi import FastAPI, HTTPException #type: ignore
+from fastapi import FastAPI, HTTPException, Request #type: ignore
+from fastapi.middleware.cors import CORSMiddleware #type: ignore
 from pydantic import BaseModel #type: ignore
 from typing import List
+import time
 from service.service import GameService
 from repository.repository import GameRepository
 
 app = FastAPI()
 repo = GameRepository()
 service = GameService(repo)
+
+# CORS Middleware
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:4200"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# Logging Middleware
+@app.middleware("http")
+async def log_requests(request: Request, call_next):
+    start_time = time.time()
+    response = await call_next(request)
+    process_time = time.time() - start_time
+    response.headers["X-Process-Time"] = str(process_time)
+    print(f"[{request.method}] {request.url.path} - Tempo: {process_time:.3f}s")
+    return response
 
 class GuessRequest(BaseModel):
     colors: List[str]
