@@ -9,7 +9,7 @@ from repository.repository import GameRepository, UserRepository
 app = FastAPI()
 game_repo = GameRepository()
 user_repo = UserRepository()
-game_service = GameService(game_repo)
+game_service = GameService(game_repo, user_repo)
 auth_service = AuthService(user_repo)
 
 # CORS Middleware
@@ -112,6 +112,15 @@ def delete_user(email: str, user: dict = Depends(get_current_user)):
 def logout(response: Response, user: dict = Depends(get_current_user)):
     response.delete_cookie(key="access_token", httponly=True, samesite="lax", secure=False)
     return {"message": "Logout realizado com sucesso"}
+
+
+@app.post("/users/reset-score")
+def reset_score(user: dict = Depends(get_current_user)):
+    """Reseta a pontuação do usuário autenticado para zero."""
+    ok = user_repo.reset_user_score(user['id'])
+    if not ok:
+        raise HTTPException(status_code=400, detail="Falha ao resetar pontuação")
+    return {"message": "Pontuação resetada", "score": 0}
 
 @app.post("/games/{game_id}/guess")
 def make_guess(game_id: str, guess: GuessRequest, user: dict = Depends(get_current_user)):

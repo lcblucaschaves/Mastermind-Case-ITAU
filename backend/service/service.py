@@ -88,8 +88,9 @@ class AuthService:
 
 
 class GameService:
-    def __init__(self, repository: GameRepository):
+    def __init__(self, repository: GameRepository, user_repo: UserRepository = None):
         self.repo = repository
+        self.user_repo = user_repo or UserRepository()
         self.available_colors = ['red', 'green', 'blue', 'yellow', 'orange', 'purple']
 
     def create_new_game(self, user_id: int) -> dict:
@@ -97,6 +98,7 @@ class GameService:
             'id': str(uuid.uuid4()),
             'secret_code': random.sample(self.available_colors, 4),
             'attempts': 0,
+            'history': [],
             'max_attempts': 10,
             'status': 'active',
             'user_id': user_id
@@ -124,7 +126,27 @@ class GameService:
         # 3) Cores corretas mas em posição errada
         wrong_pos = total_matches - correct_pos
 
-        game['attempts'] += 1
+        # registre a tentativa no histórico
+        game.setdefault('history', [])
+        attempt_number = game.get('attempts', 0) + 1
+        attempt_record = {
+            'guess': guess_colors,
+            'correct_pos': correct_pos,
+            'wrong_pos': wrong_pos,
+            'attempt_number': attempt_number,
+            'points': 0
+        }
+
+        # Pontuação só se o jogo for vencido
+        points_awarded = 0
+        if correct_pos == 4:
+            # 1ª tentativa -> 10 pontos, 2ª -> 9, ..., 10ª -> 1
+            points_awarded = max(0, 11 - attempt_number)
+            attempt_record['points'] = points_awarded
+
+        game['history'].append(attempt_record)
+
+        game['attempts'] = attempt_number
 
         if correct_pos == 4:
             game['status'] = 'won'
@@ -132,4 +154,12 @@ class GameService:
             game['status'] = 'lost'
 
         self.repo.save_game(game)
+
+        # Atualiza pontuação do usuário (somente soma, nunca subtrai)
+        if points_awarded and game.get('user_id'):
+            try:
+                self.user_repo.add_score_to_user(game['user_id'], points_awarded)
+            except Exception:
+                pass
+
         return game, (correct_pos, wrong_pos)

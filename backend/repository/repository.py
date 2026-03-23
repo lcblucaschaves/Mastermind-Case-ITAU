@@ -15,7 +15,7 @@ class UserRepository:
             db.add(db_user)
             db.commit()
             db.refresh(db_user)
-            return {'id': db_user.id, 'email': db_user.email}
+            return {'id': db_user.id, 'email': db_user.email, 'score': db_user.score}
         finally:
             db.close()
 
@@ -24,7 +24,7 @@ class UserRepository:
         try:
             db_user = db.query(User).filter(User.email == email).first()
             if db_user:
-                return {'id': db_user.id, 'email': db_user.email, 'password_hash': db_user.password_hash}
+                return {'id': db_user.id, 'email': db_user.email, 'password_hash': db_user.password_hash, 'score': db_user.score}
             return None
         finally:
             db.close()
@@ -34,7 +34,7 @@ class UserRepository:
         try:
             db_user = db.query(User).filter(User.id == user_id).first()
             if db_user:
-                return {'id': db_user.id, 'email': db_user.email}
+                return {'id': db_user.id, 'email': db_user.email, 'score': db_user.score}
             return None
         finally:
             db.close()
@@ -63,6 +63,31 @@ class UserRepository:
         finally:
             db.close()
 
+    def add_score_to_user(self, user_id: int, points: int) -> bool:
+        db = self.SessionLocal()
+        try:
+            db_user = db.query(User).filter(User.id == user_id).first()
+            if not db_user:
+                return False
+            current = getattr(db_user, 'score', 0) or 0
+            db_user.score = current + int(points)
+            db.commit()
+            return True
+        finally:
+            db.close()
+
+    def reset_user_score(self, user_id: int) -> bool:
+        db = self.SessionLocal()
+        try:
+            db_user = db.query(User).filter(User.id == user_id).first()
+            if not db_user:
+                return False
+            db_user.score = 0
+            db.commit()
+            return True
+        finally:
+            db.close()
+
 class GameRepository:
     def __init__(self):
         self.SessionLocal = SessionLocal
@@ -81,11 +106,15 @@ class GameRepository:
                 db_game.attempts = game['attempts']
                 db_game.max_attempts = game['max_attempts']
                 db_game.status = game['status']
+                # atualiza histórico caso exista
+                if 'history' in game:
+                    db_game.history = game['history']
             else:
                 # Criar novo jogo
                 db_game = Game(
                     id=game['id'],
                     secret_code=game['secret_code'],
+                    history=game.get('history', []),
                     attempts=game['attempts'],
                     max_attempts=game['max_attempts'],
                     status=game['status'],
@@ -121,6 +150,7 @@ class GameRepository:
         return {
             'id': db_game.id,
             'secret_code': db_game.secret_code,
+            'history': getattr(db_game, 'history', []) or [],
             'attempts': db_game.attempts,
             'max_attempts': db_game.max_attempts,
             'status': db_game.status,
