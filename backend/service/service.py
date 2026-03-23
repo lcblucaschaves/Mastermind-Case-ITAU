@@ -1,20 +1,105 @@
 import random
 import uuid
+import secrets
 from typing import List
-from repository.repository import GameRepository
+from datetime import datetime, timedelta
+from passlib.context import CryptContext
+from jose import jwt
+from repository.repository import GameRepository, UserRepository
+
+# Simple JWT settings (change SECRET_KEY for production)
+SECRET_KEY = "change-me-in-prod"
+ALGORITHM = "HS256"
+ACCESS_TOKEN_EXPIRE_MINUTES = 60
+
+pwd_context = CryptContext(schemes=["pbkdf2_sha256"], deprecated="auto")
+
+
+class AuthService:
+    def __init__(self, user_repo: UserRepository):
+        self.user_repo = user_repo
+
+    def hash_password(self, password: str) -> str:
+        return pwd_context.hash(password)
+
+    def verify_password(self, plain_password: str, hashed_password: str) -> bool:
+        return pwd_context.verify(plain_password, hashed_password)
+
+    def create_access_token(self, user_id: int) -> str:
+        expire = datetime.utcnow() + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+        to_encode = {"sub": str(user_id), "exp": expire}
+        return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+
+    def verify_token(self, token: str) -> int:
+        try:
+            payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+            return int(payload.get("sub"))
+        except Exception:
+            return None
+
+    def register(self, email: str, password: str) -> dict:
+        if self.user_repo.get_user_by_email(email):
+            raise ValueError("Usuário já existe")
+        # keep it simple: basic length limit
+        password = (password or "")[:128]
+        hashed = self.hash_password(password)
+        user = self.user_repo.create_user(email, hashed)
+        return user
+
+    def login(self, email: str, password: str) -> str:
+        user = self.user_repo.get_user_by_email(email)
+        if not user:
+            raise ValueError("Credenciais inválidas")
+        password = (password or "")[:128]
+        if not self.verify_password(password, user['password_hash']):
+            raise ValueError("Credenciais inválidas")
+        token = self.create_access_token(user['id'])
+        return token
+
+    def change_password(self, user_id: int, old_password: str, new_password: str) -> bool:
+        user = self.user_repo.get_user_by_id(user_id)
+        if not user:
+            raise ValueError("Usuário não encontrado")
+        # fetch full user to get password_hash
+        full = self.user_repo.get_user_by_email(user['email'])
+        if not full:
+            raise ValueError("Usuário não encontrado")
+        old_password = (old_password or "")[:128]
+        if not self.verify_password(old_password, full['password_hash']):
+            raise ValueError("Senha antiga inválida")
+        new_password = (new_password or "")[:128]
+        new_hash = self.hash_password(new_password)
+        ok = self.user_repo.update_user_password(user_id, new_hash)
+        if not ok:
+            raise ValueError("Falha ao atualizar senha")
+        return True
+
+    def delete_user(self, email: str, requester_id: int) -> bool:
+        # only allow deleting own account for simplicity
+        requester = self.user_repo.get_user_by_id(requester_id)
+        if not requester:
+            raise ValueError("Usuário solicitante não encontrado")
+        if requester['email'] != email:
+            raise ValueError("Só é possível deletar seu próprio usuário")
+        ok = self.user_repo.delete_user_by_email(email)
+        if not ok:
+            raise ValueError("Usuário não encontrado")
+        return True
+
 
 class GameService:
     def __init__(self, repository: GameRepository):
         self.repo = repository
         self.available_colors = ['red', 'green', 'blue', 'yellow', 'orange', 'purple']
 
-    def create_new_game(self) -> dict:
+    def create_new_game(self, user_id: int) -> dict:
         new_game = {
             'id': str(uuid.uuid4()),
             'secret_code': random.sample(self.available_colors, 4),
             'attempts': 0,
             'max_attempts': 10,
-            'status': 'active'
+            'status': 'active',
+            'user_id': user_id
         }
 
         self.repo.save_game(new_game)

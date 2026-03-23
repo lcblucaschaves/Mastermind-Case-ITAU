@@ -1,8 +1,67 @@
 from database.database import SessionLocal, engine, Base
-from database.models import Game
+from database.models import Game, User
 
 # Criar tabelas no banco de dados
 Base.metadata.create_all(bind=engine)
+
+class UserRepository:
+    def __init__(self):
+        self.SessionLocal = SessionLocal
+
+    def create_user(self, email: str, password_hash: str) -> dict:
+        db = self.SessionLocal()
+        try:
+            db_user = User(email=email, password_hash=password_hash)
+            db.add(db_user)
+            db.commit()
+            db.refresh(db_user)
+            return {'id': db_user.id, 'email': db_user.email}
+        finally:
+            db.close()
+
+    def get_user_by_email(self, email: str) -> dict:
+        db = self.SessionLocal()
+        try:
+            db_user = db.query(User).filter(User.email == email).first()
+            if db_user:
+                return {'id': db_user.id, 'email': db_user.email, 'password_hash': db_user.password_hash}
+            return None
+        finally:
+            db.close()
+
+    def get_user_by_id(self, user_id: int) -> dict:
+        db = self.SessionLocal()
+        try:
+            db_user = db.query(User).filter(User.id == user_id).first()
+            if db_user:
+                return {'id': db_user.id, 'email': db_user.email}
+            return None
+        finally:
+            db.close()
+    
+    def update_user_password(self, user_id: int, new_password_hash: str) -> bool:
+        db = self.SessionLocal()
+        try:
+            db_user = db.query(User).filter(User.id == user_id).first()
+            if not db_user:
+                return False
+            db_user.password_hash = new_password_hash
+            db.commit()
+            return True
+        finally:
+            db.close()
+
+    def delete_user_by_email(self, email: str) -> bool:
+        db = self.SessionLocal()
+        try:
+            db_user = db.query(User).filter(User.email == email).first()
+            if not db_user:
+                return False
+            db.delete(db_user)
+            db.commit()
+            return True
+        finally:
+            db.close()
 
 class GameRepository:
     def __init__(self):
@@ -29,7 +88,8 @@ class GameRepository:
                     secret_code=game['secret_code'],
                     attempts=game['attempts'],
                     max_attempts=game['max_attempts'],
-                    status=game['status']
+                    status=game['status'],
+                    user_id=game.get('user_id')
                 )
                 db.add(db_game)
             
@@ -63,5 +123,6 @@ class GameRepository:
             'secret_code': db_game.secret_code,
             'attempts': db_game.attempts,
             'max_attempts': db_game.max_attempts,
-            'status': db_game.status
+            'status': db_game.status,
+            'user_id': getattr(db_game, 'user_id', None)
         }
