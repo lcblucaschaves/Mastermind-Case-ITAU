@@ -88,6 +88,18 @@ class UserRepository:
         finally:
             db.close()
 
+    def get_top_users(self) -> list:
+        db = self.SessionLocal()
+        limit = 10
+        try:
+            rows = db.query(User).order_by(User.score.desc()).limit(limit).all()
+            result = []
+            for u in rows:
+                result.append({'id': u.id, 'email': u.email, 'score': getattr(u, 'score', 0) or 0})
+            return result
+        finally:
+            db.close()
+
 class GameRepository:
     def __init__(self):
         self.SessionLocal = SessionLocal

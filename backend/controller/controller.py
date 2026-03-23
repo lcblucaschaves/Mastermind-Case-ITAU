@@ -122,6 +122,15 @@ def reset_score(user: dict = Depends(get_current_user)):
         raise HTTPException(status_code=400, detail="Falha ao resetar pontuação")
     return {"message": "Pontuação resetada", "score": 0}
 
+
+@app.get("/leaderboard")
+def leaderboard():
+    """Retorna até `limit` usuários com maior pontuação (decrescente)."""
+    limit = 10  # pode ser parametrizado via query string se desejado, mas cuidado com limites abusivos
+    limit = max(1, min(100, limit))
+    top = user_repo.get_top_users()
+    return {"leaderboard": top}
+
 @app.post("/games/{game_id}/guess")
 def make_guess(game_id: str, guess: GuessRequest, user: dict = Depends(get_current_user)):
     game, result = game_service.process_guess(game_id, guess.colors)
