@@ -57,8 +57,8 @@ def get_current_user(authorization: str = Header(None, alias="Authorization")):
 
 class RegisterRequest(BaseModel):
     email: str
-    password: str
-
+    password: str    
+    name: str 
 
 class LoginRequest(BaseModel):
     email: str
@@ -86,11 +86,12 @@ def register(req: RegisterRequest):
             raise ValueError("Usuário já existe")
         
         # Registrar novo usuário
-        user = auth_service.register(req.email, req.password)
+        user = auth_service.register(req.email, req.password, req.name)
         
         print(f"   └─ ✅ Usuário criado com sucesso!")
         print(f"      ID: {user['id']}")
         print(f"      Email: {user['email']}")
+        print(f"      Name: {user['name']}")
         print(f"      Score: {user['score']}")
         
         return user
@@ -110,10 +111,12 @@ def login(req: LoginRequest):
         
         token = auth_service.login(req.email, req.password)
         
+        # fetch user info to return basic profile
+        user = user_repo.get_user_by_email(req.email)
         print(f"   └─ ✅ Login bem-sucedido!")
         print(f"      Token: {token[:20]}...")
         
-        return {"access_token": token, "token_type": "bearer"}
+        return {"access_token": token, "token_type": "bearer", "id": user['id'], "email": user['email'], "name": user['name']}
     except ValueError as e:
         print(f"   └─ ❌ Credenciais inválidas: {str(e)}")
         raise HTTPException(status_code=401, detail=str(e))

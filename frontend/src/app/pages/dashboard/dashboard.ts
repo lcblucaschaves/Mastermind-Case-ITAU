@@ -32,7 +32,7 @@ export class Dashboard implements OnInit {
     }
     try {
       const userData = JSON.parse(user);
-      this.userEmail = userData.email || 'Jogador';
+      this.userEmail = userData.name || userData.email || 'Jogador';
     } catch {
       this.userEmail = 'Jogador';
     }

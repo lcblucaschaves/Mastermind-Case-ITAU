@@ -56,6 +56,7 @@ export class Login implements OnInit, OnDestroy {
     // Formulário de Registro
     this.registerForm = this.fb.group(
       {
+        name: ['', [Validators.required, Validators.minLength(2)]],
         email: ['', [Validators.required, Validators.email]],
         password: ['', [Validators.required, Validators.minLength(6)]],
         confirmPassword: ['', [Validators.required]],
@@ -138,10 +139,10 @@ export class Login implements OnInit, OnDestroy {
           localStorage.setItem('tokenType', response.token_type);
           
           // Armazenar dados do usuário
-          const userData = { email: loginData.email, id: response.id || 1 };
+          const userData = { name: response.name || loginData.email, email: response.email || loginData.email, id: response.id || 1 };
           localStorage.setItem('user', JSON.stringify(userData));
           localStorage.setItem('userId', (response.id || 1).toString());
-          localStorage.setItem('userEmail', loginData.email);
+          localStorage.setItem('userEmail', response.email || loginData.email);
           
           this.successMessage = `✅ Login realizado com sucesso! Bem-vindo!`;
           this.loginCompleted = true;
@@ -188,16 +189,16 @@ export class Login implements OnInit, OnDestroy {
 
     this.isLoading = true;
     
-    // Extrair apenas email e password para enviar ao backend
-    const { email, password } = this.registerForm.value;
-    const registerData = { email, password };
+    // Extrair name, email e password para enviar ao backend
+    const { name, email, password } = this.registerForm.value;
+    const registerData = { name, email, password };
 
     this.apiService.register(registerData)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (response) => {
           // Armazenar dados do usuário no localStorage
-          const userData = { email, id: response.id };
+          const userData = { name: response.name || name, email, id: response.id };
           localStorage.setItem('user', JSON.stringify(userData));
           localStorage.setItem('userId', response.id.toString());
           localStorage.setItem('userEmail', email);

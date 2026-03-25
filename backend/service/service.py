@@ -36,13 +36,13 @@ class AuthService:
         except Exception:
             return None
 
-    def register(self, email: str, password: str) -> dict:
+    def register(self, email: str, password: str, name: str) -> dict:
         if self.user_repo.get_user_by_email(email):
             raise ValueError("Usuário já existe")
         # keep it simple: basic length limit
         password = (password or "")[:128]
         hashed = self.hash_password(password)
-        user = self.user_repo.create_user(email, hashed)
+        user = self.user_repo.create_user(email, hashed, name=name)
         return user
 
     def login(self, email: str, password: str) -> str:

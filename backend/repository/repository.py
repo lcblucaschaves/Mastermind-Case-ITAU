@@ -5,14 +5,14 @@ class UserRepository:
     def __init__(self):
         self.SessionLocal = SessionLocal
 
-    def create_user(self, email: str, password_hash: str) -> dict:
+    def create_user(self, email: str, password_hash: str, name: str) -> dict:
         db = self.SessionLocal()
         try:
-            db_user = User(email=email, password_hash=password_hash)
+            db_user = User(email=email, password_hash=password_hash, name=name)
             db.add(db_user)
             db.commit()
             db.refresh(db_user)
-            return {'id': db_user.id, 'email': db_user.email, 'score': db_user.score}
+            return {'id': db_user.id, 'email': db_user.email, 'name': db_user.name, 'score': db_user.score}
         finally:
             db.close()
 
@@ -21,7 +21,7 @@ class UserRepository:
         try:
             db_user = db.query(User).filter(User.email == email).first()
             if db_user:
-                return {'id': db_user.id, 'email': db_user.email, 'password_hash': db_user.password_hash, 'score': db_user.score}
+                return {'id': db_user.id, 'email': db_user.email, 'name': db_user.name, 'password_hash': db_user.password_hash, 'score': db_user.score}
             return None
         finally:
             db.close()
@@ -31,7 +31,7 @@ class UserRepository:
         try:
             db_user = db.query(User).filter(User.id == user_id).first()
             if db_user:
-                return {'id': db_user.id, 'email': db_user.email, 'score': db_user.score}
+                return {'id': db_user.id, 'email': db_user.email, 'name': db_user.name, 'score': db_user.score}
             return None
         finally:
             db.close()
@@ -92,7 +92,7 @@ class UserRepository:
             rows = db.query(User).order_by(User.score.desc()).limit(limit).all()
             result = []
             for u in rows:
-                result.append({'id': u.id, 'email': u.email, 'score': getattr(u, 'score', 0) or 0})
+                result.append({'id': u.id, 'email': u.email, 'name': u.name, 'score': u.score})
             return result
         finally:
             db.close()
