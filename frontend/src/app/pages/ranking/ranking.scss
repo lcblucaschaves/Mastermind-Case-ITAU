@@ -20,7 +20,7 @@
 
   h1 {
     margin: 0;
-    font-size: 24px;
+    font-size: 20px;
     color: white;
     font-weight: 600;
   }
@@ -33,7 +33,7 @@
 
 /* ===== BUTTONS ===== */
 .btn-secondary {
-  padding: 8px 16px;
+  padding: 6px 12px;
   background: rgba(255, 255, 255, 0.25);
   color: white;
   border: 1px solid rgba(255, 255, 255, 0.5);
@@ -50,7 +50,7 @@
 }
 
 .btn-logout {
-  padding: 8px 16px;
+  padding: 6px 12px;
   background: rgba(244, 67, 54, 0.8);
   color: white;
   border: none;
@@ -66,7 +66,7 @@
 }
 
 .btn-primary {
-  padding: 10px 20px;
+  padding: 8px 16px;
   background: #4CAF50;
   color: white;
   border: none;
@@ -83,13 +83,13 @@
 /* ===== CONTENT ===== */
 .ranking-content {
   flex: 1;
-  padding: 24px;
+  padding: 16px;
   overflow-y: auto;
 }
 
 /* ===== RANKING WRAPPER ===== */
 .ranking-wrapper {
-  max-width: 900px;
+  max-width: 760px;
   margin: 0 auto;
 }
 
@@ -107,17 +107,17 @@
   }
 
   th {
-    padding: 14px;
+    padding: 10px;
     color: white;
     font-weight: 600;
     text-align: left;
-    font-size: 13px;
+    font-size: 12px;
     text-transform: uppercase;
-    letter-spacing: 0.5px;
+    letter-spacing: 0.4px;
   }
 
   td {
-    padding: 12px 14px;
+    padding: 8px 10px;
     border-bottom: 1px solid #eee;
     font-size: 13px;
     color: #333;
@@ -140,12 +140,12 @@
   }
 
   .rank-col {
-    width: 80px;
+    width: 60px;
     font-weight: bold;
     text-align: center;
 
     .medal {
-      font-size: 20px;
+      font-size: 16px;
     }
 
     .number {
@@ -182,7 +182,7 @@
   align-items: center;
   justify-content: center;
   gap: 16px;
-  padding: 60px 20px;
+  padding: 40px 16px;
   color: white;
 
   .spinner {
@@ -227,7 +227,7 @@
   align-items: center;
   justify-content: center;
   gap: 16px;
-  padding: 60px 20px;
+  padding: 40px 16px;
   color: white;
   text-align: center;
 

@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
+import { ApiService } from '../../services/api';
 
 @Component({
   selector: 'app-dashboard',
@@ -12,7 +13,10 @@ import { Router } from '@angular/router';
 export class Dashboard implements OnInit {
   userEmail: string = '';
 
-  constructor(private readonly router: Router) {}
+  constructor(
+    private readonly router: Router,
+    private readonly apiService: ApiService
+  ) {}
 
   ngOnInit(): void {
     const user = localStorage.getItem('user');
@@ -37,7 +41,16 @@ export class Dashboard implements OnInit {
   }
 
   logout(): void {
-    localStorage.removeItem('user');
-    this.router.navigate(['/login']);
+    this.apiService.logout().subscribe({
+      next: () => {
+        localStorage.removeItem('user');
+        this.router.navigate(['/login']);
+      },
+      error: () => {
+        // even if logout request fails, clear local user data and redirect
+        localStorage.removeItem('user');
+        this.router.navigate(['/login']);
+      }
+    });
   }
 }

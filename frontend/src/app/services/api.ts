@@ -1,7 +1,7 @@
 import { Injectable, inject } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable, of } from 'rxjs';
-import { delay } from 'rxjs/operators';
+import { delay, map } from 'rxjs/operators';
 
 @Injectable({
   providedIn: 'root'
@@ -31,7 +31,8 @@ export class ApiService {
       }).pipe(delay(300));
     }
     
-    return this.http.post(`${this.apiUrl}/games`, {});
+    const opts = this.getAuthHeaders();
+    return this.http.post(`${this.apiUrl}/games`, {}, opts);
   }
 
   /**
@@ -86,7 +87,8 @@ export class ApiService {
       }).pipe(delay(500));
     }
     
-    return this.http.post(`${this.apiUrl}/games/${gameId}/guess`, guessData);
+    const opts = this.getAuthHeaders();
+    return this.http.post(`${this.apiUrl}/games/${gameId}/guess`, guessData, opts);
   }
 
   /**
@@ -102,7 +104,8 @@ export class ApiService {
       }).pipe(delay(300));
     }
     
-    return this.http.get(`${this.apiUrl}/games/${gameId}`);
+    const opts = this.getAuthHeaders();
+    return this.http.get(`${this.apiUrl}/games/${gameId}`, opts);
   }
 
   /**
@@ -121,7 +124,9 @@ export class ApiService {
       }).pipe(delay(300));
     }
     
-    return this.http.get(`${this.apiUrl}/ranking`);
+      return this.http.get(`${this.apiUrl}/leaderboard`).pipe(
+        map((resp: any) => resp?.leaderboard || [])
+      );
   }
 
   /**
@@ -157,12 +162,23 @@ export class ApiService {
 
   /**
    * Remove dados de autenticação
-   */
-  logout(): void {
+   * getStoredToken - Token armazenado 
+   */  
+  logout(): Observable<any> {
+    const opts = this.getAuthHeaders();
+    // clear localStorage immediately to avoid repeated 401s
     localStorage.removeItem('token');
     localStorage.removeItem('tokenType');
     localStorage.removeItem('userEmail');
     localStorage.removeItem('userId');
+
+    return this.http.post(`${this.apiUrl}/logout`, {}, opts);
+  }
+
+  private getAuthHeaders(): any {
+    const token = this.getStoredToken();
+    if (!token) return {};
+    return { headers: new HttpHeaders().set('Authorization', `Bearer ${token}`) };
   }
 
   /**

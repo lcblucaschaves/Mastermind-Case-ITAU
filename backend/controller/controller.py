@@ -38,8 +38,6 @@ async def log_requests(request: Request, call_next):
     return response
 
 def get_current_user(authorization: str = Header(None, alias="Authorization")):
-    # log incoming header for debugging
-    print("Authorization header received:", repr(authorization))
     if not authorization:
         raise HTTPException(status_code=401, detail="Token necessário")
     parts = authorization.split()
@@ -149,6 +147,7 @@ def delete_user(email: str, user: dict = Depends(get_current_user)):
 @app.post("/logout")
 def logout(response: Response, user: dict = Depends(get_current_user)):
     response.delete_cookie(key="access_token", httponly=True, samesite="lax", secure=False)
+    print('[LOGOUT] Logout realizado para usuário:', user['email'])
     return {"message": "Logout realizado com sucesso"}
 
 

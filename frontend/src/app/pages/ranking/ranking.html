@@ -27,24 +27,20 @@
       <table class="ranking-table">
         <thead>
           <tr>
-            <th class="rank-col">Posição</th>
-            <th class="name-col">Jogador</th>
-            <th class="score-col">Pontuação</th>
-            <th class="attempts-col">Tentativas</th>
-            <th class="date-col">Data</th>
-          </tr>
+              <th class="rank-col">Posição</th>
+              <th class="name-col">Jogador</th>
+              <th class="score-col">Pontuação</th>
+            </tr>
         </thead>
         <tbody>
-          <tr *ngFor="let player of players; let i = index" [class.top-three]="i < 3">
-            <td class="rank-col">
-              <span class="medal" *ngIf="i < 3">{{ getMedal(i) }}</span>
-              <span class="number" *ngIf="i >= 3">{{ i + 1 }}</span>
-            </td>
-            <td class="name-col">{{ player.name }}</td>
-            <td class="score-col"><strong>{{ player.score }}</strong></td>
-            <td class="attempts-col">{{ player.attempts }}/10</td>
-            <td class="date-col">{{ player.date }}</td>
-          </tr>
+            <tr *ngFor="let player of players; let i = index" [class.top-three]="i < 3">
+              <td class="rank-col">
+                <span class="medal" *ngIf="i < 3">{{ getMedal(i) }}</span>
+                <span class="number" *ngIf="i >= 3">{{ i + 1 }}</span>
+              </td>
+              <td class="name-col">{{ player.name }}</td>
+              <td class="score-col"><strong>{{ player.score }}</strong></td>
+            </tr>
         </tbody>
       </table>
     </div>
@@ -54,5 +50,7 @@
       <p>📊 Nenhum jogador no ranking ainda</p>
       <small>Seja o primeiro a jogar!</small>
     </div>
+
+    
   </div>
 </div>

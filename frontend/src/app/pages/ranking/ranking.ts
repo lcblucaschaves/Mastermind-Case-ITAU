@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { ApiService } from '../../services/api';
@@ -14,14 +14,16 @@ import { takeUntil } from 'rxjs/operators';
 })
 export class Ranking implements OnInit, OnDestroy {
   players: any[] = [];
-  isLoading = true;
+  isLoading = false;
   message = '';
   private readonly destroy$ = new Subject<void>();
 
   constructor(
     private readonly apiService: ApiService,
-    private readonly router: Router
+    private readonly router: Router,
+    private readonly cdr: ChangeDetectorRef
   ) {}
+
 
   ngOnInit(): void {
     this.loadRanking();
@@ -40,12 +42,22 @@ export class Ranking implements OnInit, OnDestroy {
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (response: any) => {
-          this.players = response.players || [];
+          // aceitar dois formatos: array direto ou { players: [] }
+          const raw = Array.isArray(response) ? response : (response.players || []);
+          this.players = raw.map((p: any) => ({
+            name: p.name || p.email || `user-${p.id || '??'}`,
+            email: p.email || '',
+            score: Number(p.score ?? 0),
+            attempts: Number(p.attempts ?? 0),
+            date: p.date || ''
+          }));
           this.isLoading = false;
+          try { this.cdr.detectChanges(); } catch {}
         },
         error: (err) => {
           this.message = 'Erro ao buscar o ranking. Tente novamente.';
           this.isLoading = false;
+          try { this.cdr.detectChanges(); } catch {}
         }
       });
   }
@@ -62,7 +74,15 @@ export class Ranking implements OnInit, OnDestroy {
   }
 
   logout(): void {
-    localStorage.removeItem('user');
-    this.router.navigate(['/login']);
+    this.apiService.logout().pipe(takeUntil(this.destroy$)).subscribe({
+      next: () => {
+        localStorage.removeItem('user');
+        this.router.navigate(['/login']);
+      },
+      error: () => {
+        localStorage.removeItem('user');
+        this.router.navigate(['/login']);
+      }
+    });
   }
 }
