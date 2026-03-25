@@ -6,20 +6,21 @@ Write-Host "Iniciando configuracao do projeto Mastermind..." -ForegroundColor Gr
 $rootPath = Get-Location # .\mastermind
 $backendPath = Join-Path $rootPath "backend" # .\mastermind\backend
 $frontendPath = Join-Path $rootPath "frontend" # .\mastermind\frontend
+$backendPython = Join-Path $backendPath "Scripts\python.exe"
+$backendRequirements = Join-Path $backendPath "requirements.txt"
 
 # 1. Configurar Backend (FastAPI)
 Write-Host "`nConfigurando Backend..." -ForegroundColor Yellow
 
 # Criar ambiente virtual se não existir
-if (-not (Test-Path "backend")) {
+if (-not (Test-Path "backend/Scripts")) {
     Write-Host "Criando ambiente virtual Python..."
     python -m venv backend
 }
 
-# Ativar e instalar dependências
-Write-Host "Ativando ambiente virtual e instalando dependencias..."
-& ".\backend\Scripts\Activate.ps1"
-pip install -q -r requirements.txt 2>$null
+# Instalar dependências no ambiente virtual do backend
+Write-Host "Instalando dependencias do backend..."
+& $backendPython -m pip install -q -r $backendRequirements
 
 # 2. Configurar Frontend (Angular)
 Write-Host "Configurando Frontend..." -ForegroundColor Yellow
@@ -34,7 +35,7 @@ Write-Host "`nIniciando servidores..." -ForegroundColor Green
 
 # Iniciar FastAPI em nova janela PowerShell
 Write-Host "Abrindo FastAPI em nova janela..."
-$backendCmd = "cd '$backendPath'; `$env:Path = (Get-Item -Path '.\Scripts').FullName + ';' + `$env:Path; python -m uvicorn controller.controller:app --reload --host 0.0.0.0 --port 8000"
+$backendCmd = "cd '$backendPath'; & '$backendPython' -m uvicorn controller.controller:app --reload --host 0.0.0.0 --port 8000"
 Start-Process powershell -ArgumentList "-NoExit", "-Command", $backendCmd
 
 # Aguardar um pouco
