@@ -1,0 +1,105 @@
+﻿<div class="mastermind-container">
+  <!-- DEBUG BUTTON - MOCK MODE TOGGLE -->
+  <button class="debug-mock-button" 
+          (click)="toggleMockMode()"
+          [class.active]="mockMode"
+          title="Toggle Mock Mode para testes">
+    🎭 {{ mockMode ? 'MOCK ON' : 'MOCK OFF' }}
+  </button>
+
+  <!-- MASTERMIND BOARD -->
+  <div class="mastermind-board">
+    <!-- TITLE -->
+    <div class="board-title">MASTERMIND</div>
+
+    <!-- SECRET CODE ROW (TOP) -->
+    <div class="secret-code-section">
+      <div class="secret-code-row">
+        <div class="secret-code-slot" *ngFor="let p of getPositions()">🤐</div>
+      </div>
+    </div>
+
+    <!-- ATTEMPTS CONTAINER -->
+    <div class="attempts-container">
+      <!-- PREVIOUS GUESSES -->
+      <div *ngFor="let guess of guesses; let i = index" class="attempt-row">
+        <div class="attempt-label">{{ maxAttempts - i }}</div>
+        <div class="attempt-positions">
+          <div *ngFor="let letter of guess.colors" class="position-peg">{{ getColorEmoji(letter) }}</div>
+        </div>
+        <div class="attempt-feedback">
+          <div class="feedback-grid">
+            <div *ngFor="let _dot of [].constructor(guess.feedback.correct_position)" class="feedback-peg correct"></div>
+            <div *ngFor="let _dot of [].constructor(guess.feedback.wrong_position)" class="feedback-peg wrong"></div>
+            <div *ngFor="let _empty of [].constructor(4 - guess.feedback.correct_position - guess.feedback.wrong_position)" class="feedback-peg empty"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- CURRENT ATTEMPT ROW (PLAYING) -->
+      <div *ngIf="gameStatus === 'playing'" class="attempt-row current-attempt">
+        <div class="attempt-label current">{{ currentAttempt + 1 }}</div>
+        <div class="attempt-positions">
+          <div *ngFor="let position of getPositions()" 
+               class="position-peg editable"
+               [class.filled]="isPositionSelected(position)"
+               [class.empty-slot]="!isPositionSelected(position)"
+               (click)="clearPosition(position)">
+            {{ isPositionSelected(position) ? getColorEmoji(selectedColors[position]) : '-' }}
+          </div>
+        </div>
+        <div class="attempt-feedback"></div>
+      </div>
+
+      <!-- EMPTY FUTURE ATTEMPTS -->
+      <div *ngFor="let row of [].constructor(maxAttempts - currentAttempt - (gameStatus === 'playing' ? 1 : 0))" class="attempt-row">
+        <div class="attempt-label">-</div>
+        <div class="attempt-positions">
+          <div class="position-peg empty-slot" *ngFor="let p of getPositions()">-</div>
+        </div>
+        <div class="attempt-feedback"></div>
+      </div>
+    </div>
+
+    <!-- COLOR SELECTOR (WHEN PLAYING) -->
+    <div *ngIf="gameStatus === 'playing'" class="color-selector">
+      <div class="color-buttons">
+        <button *ngFor="let color of availableColors"
+                class="color-button"
+                (click)="selectColor(color.letter, selectedColors.indexOf(''))"
+                [disabled]="selectedColors.indexOf('') === -1"
+                [title]="color.color">
+          <span class="color-letter">{{ color.letter }}</span>
+          <span class="color-emoji">{{ color.emoji }}</span>
+        </button>
+      </div>
+      <button class="submit-button"
+              (click)="submitGuess()"
+              [disabled]="selectedColors.some(c => !c)">
+        ENVIAR PALPITE
+      </button>
+    </div>
+
+    <!-- GAME OVER SCREEN -->
+    <div *ngIf="gameStatus !== 'playing'" class="game-over-screen">
+      <h2 *ngIf="gameStatus === 'won'" class="result-title victory">🎉 VENCEU! 🎉</h2>
+      <h2 *ngIf="gameStatus === 'lost'" class="result-title defeat">😢 FIM DO JOGO 😢</h2>
+      <div class="result-stats">
+        <p><strong>Tentativas:</strong> {{ currentAttempt }} / {{ maxAttempts }}</p>
+        <p *ngIf="gameStatus === 'won'"><strong>Pontuação:</strong> {{ calculateScore() }} pontos</p>
+      </div>
+      <button class="restart-button" (click)="restartGame()">NOVO JOGO</button>
+      <button class="back-button" (click)="backToDashboard()">VOLTAR AO MENU</button>
+    </div>
+
+    <!-- STATUS MESSAGE -->
+    <div class="message-area" [ngClass]="messageType">
+      {{ message }}
+    </div>
+  </div>
+
+  <!-- FIREWORKS CELEBRATION (ON WIN) -->
+  <div *ngIf="gameStatus === 'won'" class="fireworks-container">
+    <div class="firework" *ngFor="let i of [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39]"></div>
+  </div>
+</div>

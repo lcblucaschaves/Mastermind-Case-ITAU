@@ -1,9 +1,6 @@
 from database.database import SessionLocal, engine, Base
 from database.models import Game, User
 
-# Criar tabelas no banco de dados
-Base.metadata.create_all(bind=engine)
-
 class UserRepository:
     def __init__(self):
         self.SessionLocal = SessionLocal

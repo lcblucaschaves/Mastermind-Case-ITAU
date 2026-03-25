@@ -1,0 +1,34 @@
+<div class="dashboard-container">
+  <div class="dashboard-card">
+    <div class="header">
+      <h1>🎮 MASTERMIND</h1>
+      <p class="subtitle">Bem-vindo!</p>
+    </div>
+
+    <div class="user-info">
+      <p>👤 {{ userEmail }}</p>
+    </div>
+
+    <div class="menu-buttons">
+      <button class="btn btn-primary" (click)="startGame()">
+        <span class="icon">🎯</span>
+        <span class="text">Iniciar Jogo</span>
+      </button>
+
+      <button class="btn btn-secondary" (click)="viewRanking()">
+        <span class="icon">🏆</span>
+        <span class="text">Ver Ranking</span>
+      </button>
+
+      <button class="btn btn-logout" (click)="logout()">
+        <span class="icon">🚪</span>
+        <span class="text">Sair</span>
+      </button>
+    </div>
+
+    <div class="footer">
+      <p class="info">Adivinhe a sequência secreta de cores em 10 tentativas!</p>
+      <p class="colors-info">🔴 Red | 🔵 Blue | 🟡 Yellow | 🟢 Green | 🟣 Purple | 🟠 Orange</p>
+    </div>
+  </div>
+</div>

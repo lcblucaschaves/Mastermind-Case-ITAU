@@ -1,12 +1,17 @@
-from fastapi import FastAPI, HTTPException, Request, Depends, Header, Response #type: ignore
-from fastapi.middleware.cors import CORSMiddleware #type: ignore
-from pydantic import BaseModel #type: ignore
+from fastapi import FastAPI, HTTPException, Request, Depends, Header, Response
+from fastapi.middleware.cors import CORSMiddleware
+from pydantic import BaseModel
 from typing import List
 import time
 from service.service import GameService, AuthService
 from repository.repository import GameRepository, UserRepository
+from database.database import init_db
 
 app = FastAPI()
+
+# Inicializar banco de dados
+init_db()
+
 game_repo = GameRepository()
 user_repo = UserRepository()
 game_service = GameService(game_repo, user_repo)
@@ -28,7 +33,8 @@ async def log_requests(request: Request, call_next):
     response = await call_next(request)
     process_time = time.time() - start_time
     response.headers["X-Process-Time"] = str(process_time)
-    print(f"[{request.method}] {request.url.path} - Tempo: {process_time:.3f}s")
+    print(f"\n[{request.method}] {request.url.path}")
+    print(f"   └─ Status: {response.status_code} | Tempo: {process_time:.3f}s")
     return response
 
 def get_current_user(authorization: str = Header(None, alias="Authorization")):
@@ -72,18 +78,50 @@ class ChangePasswordRequest(BaseModel):
 @app.post("/register")
 def register(req: RegisterRequest):
     try:
-        return auth_service.register(req.email, req.password)
+        print(f"\n [REGISTER] Iniciando registro...")
+        print(f"   └─ Email: {req.email}")
+        
+        # Verificar se usuário já existe
+        existing_user = user_repo.get_user_by_email(req.email)
+        if existing_user:
+            print(f"   └─  Email já registrado!")
+            raise ValueError("Usuário já existe")
+        
+        # Registrar novo usuário
+        user = auth_service.register(req.email, req.password)
+        
+        print(f"   └─ ✅ Usuário criado com sucesso!")
+        print(f"      ID: {user['id']}")
+        print(f"      Email: {user['email']}")
+        print(f"      Score: {user['score']}")
+        
+        return user
     except ValueError as e:
+        print(f"   └─ ❌ Erro de validação: {str(e)}")
         raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        print(f"   └─ ❌ Erro inesperado: {str(e)}")
+        raise HTTPException(status_code=500, detail="Erro interno do servidor")
 
 
 @app.post("/login")
 def login(req: LoginRequest):
     try:
+        print(f"\n [LOGIN] Iniciando login...")
+        print(f"   └─ Email: {req.email}")
+        
         token = auth_service.login(req.email, req.password)
+        
+        print(f"   └─ ✅ Login bem-sucedido!")
+        print(f"      Token: {token[:20]}...")
+        
         return {"access_token": token, "token_type": "bearer"}
     except ValueError as e:
+        print(f"   └─ ❌ Credenciais inválidas: {str(e)}")
         raise HTTPException(status_code=401, detail=str(e))
+    except Exception as e:
+        print(f"   └─ ❌ Erro inesperado: {str(e)}")
+        raise HTTPException(status_code=500, detail="Erro interno do servidor")
 
 
 @app.post("/games")

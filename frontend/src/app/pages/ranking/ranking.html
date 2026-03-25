@@ -1,0 +1,58 @@
+﻿<div class="ranking-container">
+  <!-- HEADER -->
+  <div class="ranking-header">
+    <h1>🏆 Ranking Geral - Mastermind</h1>
+    <div class="header-buttons">
+      <button class="btn-secondary" (click)="backToDashboard()">← Voltar</button>
+      <button class="btn-logout" (click)="logout()">Sair</button>
+    </div>
+  </div>
+
+  <!-- CONTENT -->
+  <div class="ranking-content">
+    <!-- Loading -->
+    <div *ngIf="isLoading" class="loading-state">
+      <div class="spinner"></div>
+      <p>Carregando ranking...</p>
+    </div>
+
+    <!-- Error -->
+    <div *ngIf="message && !isLoading" class="error-state">
+      <p class="error-message">{{ message }}</p>
+      <button class="btn-primary" (click)="loadRanking()">Tentar Novamente</button>
+    </div>
+
+    <!-- Ranking Table -->
+    <div *ngIf="!isLoading && !message && players.length > 0" class="ranking-wrapper">
+      <table class="ranking-table">
+        <thead>
+          <tr>
+            <th class="rank-col">Posição</th>
+            <th class="name-col">Jogador</th>
+            <th class="score-col">Pontuação</th>
+            <th class="attempts-col">Tentativas</th>
+            <th class="date-col">Data</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let player of players; let i = index" [class.top-three]="i < 3">
+            <td class="rank-col">
+              <span class="medal" *ngIf="i < 3">{{ getMedal(i) }}</span>
+              <span class="number" *ngIf="i >= 3">{{ i + 1 }}</span>
+            </td>
+            <td class="name-col">{{ player.name }}</td>
+            <td class="score-col"><strong>{{ player.score }}</strong></td>
+            <td class="attempts-col">{{ player.attempts }}/10</td>
+            <td class="date-col">{{ player.date }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Empty State -->
+    <div *ngIf="!isLoading && !message && players.length === 0" class="empty-state">
+      <p>📊 Nenhum jogador no ranking ainda</p>
+      <small>Seja o primeiro a jogar!</small>
+    </div>
+  </div>
+</div>

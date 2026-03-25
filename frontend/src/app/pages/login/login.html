@@ -1,0 +1,193 @@
+﻿<div class="login-container">
+  <div class="login-wrapper">
+    <div class="explanation-section">
+      <div class="explanation-content">
+        <h2>Como Jogar</h2>
+        
+        <div class="explanation-item">
+          <h3>Objetivo</h3>
+          <p>Descubra a sequência de 4 cores em 10 tentativas!</p>
+        </div>
+
+        <div class="explanation-item">
+          <h3>Como Funciona</h3>
+          <ul>
+            <li><strong>4 posições</strong> com cores variadas</li>
+            <li>Você tem <strong>10 tentativas</strong> para adivinhar</li>
+            <li>A cada palpite, recebe feedback:</li>
+            <ul class="feedback-list">
+              <li><span class="circle correct"></span> <strong>Verde:</strong> Cor correta na posição correta</li>
+              <li><span class="circle wrong"></span> <strong>Amarelo:</strong> Cor correta na posição errada</li>
+              <li><strong>Nada:</strong> Cor não existe no código</li>
+            </ul>
+          </ul>
+        </div>
+        <div class="explanation-footer">
+          <p> <em>Use lógica e dedução para vencer!</em></p>
+        </div>
+      </div>
+    </div>
+
+    <!-- SEÇÃO DIREITA: LOGIN/REGISTRO -->
+    <div class="login-section">
+      <div class="login-card">
+        <div class="login-header">
+          <h1>Mastermind</h1>
+          <p class="subtitle">Bem-vindo ao Jogo</p>
+        </div>
+
+        <!-- Abas de Login/Registro -->
+        <div class="tabs">
+          <button 
+            class="tab-button" 
+            [class.active]="!isRegisterMode"
+            (click)="toggleMode(false)"
+            type="button"
+          >
+            Entrar
+          </button>
+          <button 
+            class="tab-button" 
+            [class.active]="isRegisterMode"
+            (click)="toggleMode(true)"
+            type="button"
+          >
+            Cadastro
+          </button>
+        </div>
+
+        <!-- Formulário de LOGIN -->
+        <form 
+          *ngIf="!isRegisterMode"
+          [formGroup]="loginForm" 
+          (ngSubmit)="onLogin()" 
+          class="login-form"
+        >
+          <!-- Campo de Email -->
+          <div class="form-group">
+            <label for="email">E-mail</label>
+            <input
+              type="email"
+              id="email"
+              formControlName="email"
+              placeholder="seu@email.com"
+              class="form-input"
+              [class.input-error]="isFieldInvalid('email', loginForm)"
+            />
+            <span class="error-message" *ngIf="isFieldInvalid('email', loginForm)">
+              E-mail válido é obrigatório
+            </span>
+          </div>
+
+          <!-- Campo de Senha -->
+          <div class="form-group">
+            <label for="password">Senha</label>
+            <input
+              type="password"
+              id="password"
+              formControlName="password"
+              placeholder="Digite sua senha"
+              class="form-input"
+              [class.input-error]="isFieldInvalid('password', loginForm)"
+            />
+            <span class="error-message" *ngIf="isFieldInvalid('password', loginForm)">
+              Senha é obrigatória (mínimo 6 caracteres)
+            </span>
+          </div>
+
+          <!-- Mensagem de Sucesso/Erro (Login) -->
+          <div class="message" *ngIf="successMessage && !isRegisterMode" [class.success]="true">
+            {{ successMessage }}
+          </div>
+          <div class="message" *ngIf="errorMessage && !isRegisterMode" [class.error]="true">
+            {{ errorMessage }}
+          </div>
+
+          <!-- Botão de Entrar -->
+          <button
+            type="submit"
+            class="btn-login"
+            [disabled]="loginForm.invalid || isLoading"
+          >
+            <span *ngIf="!isLoading">Entrar no Jogo</span>
+            <span *ngIf="isLoading" class="loading-spinner">Entrando...</span>
+          </button>
+        </form>
+
+        <!-- Formulário de REGISTRO -->
+        <form 
+          *ngIf="isRegisterMode"
+          [formGroup]="registerForm" 
+          (ngSubmit)="onRegister()" 
+          class="login-form"
+        >
+          <!-- Campo de Email -->
+          <div class="form-group">
+            <label for="register-email">E-mail</label>
+            <input
+              type="email"
+              id="register-email"
+              formControlName="email"
+              placeholder="seu@email.com"
+              class="form-input"
+              [class.input-error]="isFieldInvalid('email', registerForm)"
+            />
+            <span class="error-message" *ngIf="isFieldInvalid('email', registerForm)">
+              E-mail válido é obrigatório
+            </span>
+          </div>
+
+          <!-- Campo de Senha -->
+          <div class="form-group">
+            <label for="register-password">Senha</label>
+            <input
+              type="password"
+              id="register-password"
+              formControlName="password"
+              placeholder="Digite sua senha"
+              class="form-input"
+              [class.input-error]="isFieldInvalid('password', registerForm)"
+            />
+            <span class="error-message" *ngIf="isFieldInvalid('password', registerForm)">
+              Senha é obrigatória (mínimo 6 caracteres)
+            </span>
+          </div>
+
+          <!-- Campo de Confirmar Senha -->
+          <div class="form-group">
+            <label for="confirm-password">Confirmar Senha</label>
+            <input
+              type="password"
+              id="confirm-password"
+              formControlName="confirmPassword"
+              placeholder="Confirme sua senha"
+              class="form-input"
+              [class.input-error]="isFieldInvalid('confirmPassword', registerForm)"
+            />
+            <span class="error-message" *ngIf="isFieldInvalid('confirmPassword', registerForm)">
+              As senhas não coincidem
+            </span>
+          </div>
+
+          <!-- Mensagem de Sucesso/Erro (Registro) -->
+          <div class="message" *ngIf="successMessage && isRegisterMode" [class.success]="true">
+            {{ successMessage }}
+          </div>
+          <div class="message" *ngIf="errorMessage && isRegisterMode" [class.error]="true">
+            {{ errorMessage }}
+          </div>
+
+          <!-- Botão de Cadastro -->
+          <button
+            type="submit"
+            class="btn-login"
+            [disabled]="registerForm.invalid || isLoading"
+          >
+            <span *ngIf="!isLoading">Criar Conta</span>
+            <span *ngIf="isLoading" class="loading-spinner">Criando...</span>
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
