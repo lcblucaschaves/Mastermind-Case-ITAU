@@ -12,5 +12,4 @@ backend/controller/__pycache__
 
 backend/api_contract.yaml
 .coverage
-backend/tests/__init__.py
-/backend/tests/__pycache__
+backend/tests/__pycache__
