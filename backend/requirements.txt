@@ -1,6 +1,11 @@
+dotenv
 fastapi
 uvicorn
 pydantic
 sqlalchemy
 python-jose[cryptography]
 passlib[bcrypt]
+
+# Dependências de teste
+pytest
+httpx

@@ -1,20 +1,28 @@
 import random
 import uuid
+import logging
+import os
 from typing import List
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
+from dotenv import load_dotenv
 from passlib.context import CryptContext
 from jose import jwt
 from repository.repository import GameRepository, UserRepository
 
-# Simple JWT settings (change SECRET_KEY for production)
-SECRET_KEY = "change-me-in-prod"
-ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 60
+load_dotenv()
+
+logger = logging.getLogger(__name__)
+
+
+SECRET_KEY = os.getenv("SECRET_KEY")
+ALGORITHM = os.getenv("ALGORITHM")
+ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES"))
 
 pwd_context = CryptContext(schemes=["pbkdf2_sha256"], deprecated="auto")
 
 
 class AuthService:
+    """Serviço de autenticação e gerenciamento de usuários."""
     def __init__(self, user_repo: UserRepository):
         self.user_repo = user_repo
 
@@ -25,11 +33,11 @@ class AuthService:
         return pwd_context.verify(plain_password, hashed_password)
 
     def create_access_token(self, user_id: int) -> str:
-        expire = datetime.utcnow() + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+        expire = datetime.now(timezone.utc) + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
         to_encode = {"sub": str(user_id), "exp": expire}
         return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
 
-    def verify_token(self, token: str) -> int:
+    def verify_token(self, token: str) -> int | None:
         try:
             payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
             return int(payload.get("sub"))
@@ -38,51 +46,62 @@ class AuthService:
 
     def register(self, email: str, password: str, name: str) -> dict:
         if self.user_repo.get_user_by_email(email):
+            logger.warning(f"Falha no registro - email já existe: {email}")
             raise ValueError("Usuário já existe")
-        # keep it simple: basic length limit
         password = (password or "")[:128]
         hashed = self.hash_password(password)
         user = self.user_repo.create_user(email, hashed, name=name)
+        logger.info(f"Usuário registrado com sucesso: id={user['id']}, email={user['email']}, nome={user['name']}")
         return user
 
     def login(self, email: str, password: str) -> str:
         user = self.user_repo.get_user_by_email(email)
         if not user:
+            logger.warning(f"Falha no login - usuário não encontrado: {email}")
             raise ValueError("Credenciais inválidas")
         password = (password or "")[:128]
         if not self.verify_password(password, user['password_hash']):
+            logger.warning(f"Falha no login - senha inválida: {email}")
             raise ValueError("Credenciais inválidas")
         token = self.create_access_token(user['id'])
+        logger.info(f"Login realizado com sucesso: id={user['id']}, email={user['email']}")
         return token
 
     def change_password(self, user_id: int, old_password: str, new_password: str) -> bool:
         user = self.user_repo.get_user_by_id(user_id)
         if not user:
+            logger.warning(f"Falha ao alterar senha - usuário não encontrado: id={user_id}")
             raise ValueError("Usuário não encontrado")
-        # fetch full user to get password_hash
         full = self.user_repo.get_user_by_email(user['email'])
         if not full:
+            logger.warning(f"Falha ao alterar senha - usuário não encontrado: email={user['email']}")
             raise ValueError("Usuário não encontrado")
         old_password = (old_password or "")[:128]
         if not self.verify_password(old_password, full['password_hash']):
+            logger.warning(f"Falha ao alterar senha - senha antiga inválida: user_id={user_id}")
             raise ValueError("Senha antiga inválida")
         new_password = (new_password or "")[:128]
         new_hash = self.hash_password(new_password)
         ok = self.user_repo.update_user_password(user_id, new_hash)
         if not ok:
+            logger.error(f"Falha ao alterar senha - erro ao atualizar banco de dados: user_id={user_id}")
             raise ValueError("Falha ao atualizar senha")
+        logger.info(f"Senha alterada com sucesso: user_id={user_id}")
         return True
 
     def delete_user(self, email: str, requester_id: int) -> bool:
-        # only allow deleting own account for simplicity
         requester = self.user_repo.get_user_by_id(requester_id)
         if not requester:
+            logger.warning(f"Falha ao deletar usuário - solicitante não encontrado: requester_id={requester_id}")
             raise ValueError("Usuário solicitante não encontrado")
         if requester['email'] != email:
+            logger.warning(f"Falha ao deletar usuário - permissão negada: solicitante={requester['email']}, alvo={email}")
             raise ValueError("Só é possível deletar seu próprio usuário")
         ok = self.user_repo.delete_user_by_email(email)
         if not ok:
+            logger.warning(f"Falha ao deletar usuário - usuário não encontrado: email={email}")
             raise ValueError("Usuário não encontrado")
+        logger.info(f"Usuário deletado com sucesso: email={email}")
         return True
 
 
@@ -104,12 +123,30 @@ class GameService:
         }
 
         self.repo.save_game(new_game)
-        new_game.pop('secret_code')  # Remove o código secreto para a resposta pública
+        logger.info(f"Novo jogo criado com sucesso: game_id={new_game['id']}, user_id={user_id}")
+        new_game.pop('secret_code')
         return new_game
 
     def process_guess(self, game_id: str, guess_colors: List[str]):
+        """Processa uma tentativa de adivinhação no jogo Mastermind.
+        
+        Valida a tentativa, calcula as cores corretas (posição correta e errada),
+        registra o histórico, atualiza o status do jogo e a pontuação do usuário.
+
+        Args:
+            game_id (str): Identificador único do jogo.
+            guess_colors (List[str]): Lista com 4 cores da tentativa do jogador.
+
+        Returns:
+            tuple: (game, result) onde:
+                - game (dict): Estado atualizado do jogo ou None se jogo não encontrado.
+                - result (tuple | str): Se game é None, retorna mensagem de erro.
+                  Caso contrário, retorna (correct_pos, wrong_pos) com a contagem
+                  de acertos na posição correta e cores corretas em posição errada.
+        """
         game = self.repo.get_game(game_id)
         if not game or game.get('status') != 'active':
+            logger.warning(f"Falha ao processar tentativa - jogo não está ativo: game_id={game_id}")
             return None, 'Jogo não encontrado ou já finalizado.'
 
         # Lógica do Mastermind 
@@ -125,7 +162,7 @@ class GameService:
         # 3) Cores corretas mas em posição errada
         wrong_pos = total_matches - correct_pos
 
-        # registre a tentativa no histórico
+        # Registra a tentativa no histórico
         game.setdefault('history', [])
         attempt_number = game.get('attempts', 0) + 1
         attempt_record = {
@@ -158,7 +195,10 @@ class GameService:
         if points_awarded and game.get('user_id'):
             try:
                 self.user_repo.add_score_to_user(game['user_id'], points_awarded)
-            except Exception:
-                pass
-
+                logger.info(f"Pontuação do usuário atualizada: user_id={game['user_id']}, pontos={points_awarded}")
+            except Exception as e:
+                logger.error(f"Falha ao atualizar pontuação: user_id={game['user_id']}, erro={str(e)}")
+        
+        game_status = game['status']
+        logger.info(f"Tentativa processada: game_id={game_id}, tentativa={attempt_number}, corretas_posição={correct_pos}, corretas_posição_errada={wrong_pos}, status={game_status}")
         return game, (correct_pos, wrong_pos)
