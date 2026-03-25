@@ -140,7 +140,7 @@ class GameService:
         points_awarded = 0
         if correct_pos == 4:
             # 1ª tentativa -> 10 pontos, 2ª -> 9, ..., 10ª -> 1
-            points_awarded = max(0, 11 - attempt_number)
+            points_awarded = max(0, 1100 - attempt_number * 100)
             attempt_record['points'] = points_awarded
 
         game['history'].append(attempt_record)

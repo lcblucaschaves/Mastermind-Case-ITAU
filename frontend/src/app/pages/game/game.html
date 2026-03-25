@@ -1,11 +1,11 @@
 ﻿<div class="mastermind-container">
-  <!-- DEBUG BUTTON - MOCK MODE TOGGLE -->
+  <!-- DEBUG BUTTON - MOCK MODE TOGGLE 
   <button class="debug-mock-button" 
           (click)="toggleMockMode()"
           [class.active]="mockMode"
           title="Toggle Mock Mode para testes">
     🎭 {{ mockMode ? 'MOCK ON' : 'MOCK OFF' }}
-  </button>
+  </button>-->
 
   <!-- MASTERMIND BOARD -->
   <div class="mastermind-board">
@@ -15,7 +15,12 @@
     <!-- SECRET CODE ROW (TOP) -->
     <div class="secret-code-section">
       <div class="secret-code-row">
-        <div class="secret-code-slot" *ngFor="let p of getPositions()">🤐</div>
+        <div class="secret-code-slot" *ngFor="let p of getPositions()">
+          <ng-container *ngIf="secretCode && secretCode[p]; else hiddenSlot">
+            <span class="secret-emoji">{{ getColorEmoji(secretCode[p]) }}</span>
+          </ng-container>
+          <ng-template #hiddenSlot>🤐</ng-template>
+        </div>
       </div>
     </div>
 

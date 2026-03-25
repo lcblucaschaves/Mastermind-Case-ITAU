@@ -14,6 +14,7 @@ export class ApiService {
   // Modo MOCK para testar sem backend
   private MOCK_MODE = false;
   private mockAttemptCount = 0;
+  private mockSecretCode: string[] | null = null;
 
   constructor() { }
 
@@ -23,6 +24,7 @@ export class ApiService {
   startGame(): Observable<any> {
     if (this.MOCK_MODE) {
       this.mockAttemptCount = 0;
+      this.mockSecretCode = this.generateMockSecret();
       return of({
         id: 'mock-game-' + Date.now(),
         status: 'playing',
@@ -71,7 +73,10 @@ export class ApiService {
           feedback: {
             correct_position: 4,
             wrong_position: 0
-          }
+          },
+          status: 'won',
+          message: `Tentativa ${this.mockAttemptCount}/10 - VITÓRIA!`,
+          secret_code: this.mockSecretCode
         }).pipe(delay(500));
       }
       
@@ -83,7 +88,9 @@ export class ApiService {
         feedback: {
           correct_position: randomCorrect,
           wrong_position: randomWrong
-        }
+        },
+        status: 'playing',
+        message: `Tentativa ${this.mockAttemptCount}/10`
       }).pipe(delay(500));
     }
     
@@ -97,11 +104,14 @@ export class ApiService {
    */
   getGameStatus(gameId: string): Observable<any> {
     if (this.MOCK_MODE) {
-      return of({
+      const base: any = {
         id: gameId,
-        status: 'playing',
-        attempts: this.mockAttemptCount
-      }).pipe(delay(300));
+        status: this.mockAttemptCount >= 3 ? 'won' : 'playing',
+        attempts: this.mockAttemptCount,
+        max_attempts: 10
+      };
+      if (this.mockAttemptCount >= 3 && this.mockSecretCode) base.secret_code = this.mockSecretCode;
+      return of(base).pipe(delay(300));
     }
     
     const opts = this.getAuthHeaders();
@@ -203,7 +213,28 @@ export class ApiService {
    */
   toggleMockMode(): void {
     this.MOCK_MODE = !this.MOCK_MODE;
+    if (!this.MOCK_MODE) {
+      this.mockSecretCode = null;
+      this.mockAttemptCount = 0;
+    }
     console.log('🎭 MOCK MODE:', this.MOCK_MODE ? 'ATIVADO ✅' : 'DESATIVADO ❌');
+  }
+
+  /**
+   * Retorna o secret code gerado no modo mock (ou null)
+   */
+  getMockSecret(): string[] | null {
+    return this.mockSecretCode;
+  }
+
+  private generateMockSecret(): string[] {
+    const colors = ['red','blue','yellow','green','purple','orange'];
+    const secret: string[] = [];
+    for (let i = 0; i < 4; i++) {
+      const idx = Math.floor(Math.random() * colors.length);
+      secret.push(colors[idx]);
+    }
+    return secret;
   }
 
   /**
