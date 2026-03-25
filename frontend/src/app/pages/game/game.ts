@@ -29,13 +29,11 @@ export class Game implements OnInit, OnDestroy {
   numPositions = 4;
   currentAttempt = 0;
   guesses: Guess[] = [];
-  selectedColors: string[] = Array(4).fill('');
+  selectedColors: string[] = new Array(4).fill('');
   gameStatus: 'playing' | 'won' | 'lost' = 'playing';
 
-  // Secret code to reveal at game end (letters like 'vermelho', 'azul', ...)
   secretCode: string[] = [];
 
-  // UI - Color options with letters (6 colors available)
   availableColors = [
     { letter: 'vermelho', color: 'red', emoji: '🔴' },
     { letter: 'azul', color: 'blue', emoji: '🔵' },
@@ -84,18 +82,18 @@ export class Game implements OnInit, OnDestroy {
           this.gameId = response.id;
           this.currentAttempt = 0;
           this.guesses = [];
-          this.selectedColors = Array(this.numPositions).fill('');
+          this.selectedColors = new Array(this.numPositions).fill('');
           // limpar segredo anterior
           this.secretCode = [];
           this.gameStatus = 'playing';
           this.message = 'Jogo iniciado! Tente adivinhar a sequência de cores.';
           this.messageType = 'info';
-          try { this.cd.detectChanges(); } catch (_e) {}
+          try { this.cd.detectChanges(); } catch (_e) {console.log('Error detecting changes:', _e);}
         },
         error: () => {
           this.message = 'Erro ao iniciar o jogo. Tente novamente.';
           this.messageType = 'error';
-          try { this.cd.detectChanges(); } catch (_e) {}
+          try { this.cd.detectChanges(); } catch (_e) {console.log('Error detecting changes:', _e);}
         },
       });
   }
@@ -110,17 +108,11 @@ export class Game implements OnInit, OnDestroy {
     this.selectedColors = [...this.selectedColors];
   }
 
-  /**
-   * Obtém a cor em inglês baseado na letra
-   */
   getColorName(letter: string): string {
     const colorObj = this.availableColors.find(c => c.letter === letter);
     return colorObj ? colorObj.color : '';
   }
 
-  /**
-   * Converte array de letras para array de cores em inglês
-   */
   convertToEnglishColors(letters: string[]): string[] {
     return letters.map(letter => this.getColorName(letter));
   }
@@ -141,6 +133,7 @@ export class Game implements OnInit, OnDestroy {
     if (this.selectedColors.some(color => !color)) {
       this.message = 'Por favor, selecione uma cor para cada posição.';
       this.messageType = 'error';
+      try { this.cd.detectChanges(); } catch (_e) {console.log('Error detecting changes:', _e);}
       return;
     }
 
@@ -160,7 +153,7 @@ export class Game implements OnInit, OnDestroy {
         next: (response: any) => {
           // A API pode retornar o feedback em dois formatos:
           // 1) { feedback: { correct_position, wrong_position } } (modo mock atual)
-          // 2) { correct_position, wrong_position, message, status } (backend conforme api_contract.yaml)
+          // 2) { correct_position, wrong_position, message, status }
           const feedback = response?.feedback ?? {
             correct_position: response?.correct_position ?? 0,
             wrong_position: response?.wrong_position ?? 0,
@@ -196,14 +189,14 @@ export class Game implements OnInit, OnDestroy {
           }
 
           // Limpar seleção para o próximo palpite
-          this.selectedColors = Array(this.numPositions).fill('');
+          this.selectedColors = new Array(this.numPositions).fill('');
           // Forçar atualização do template caso o callback tenha sido executado fora da zona do Angular
-          try { this.cd.detectChanges(); } catch (_e) {}
+          try { this.cd.detectChanges(); } catch (_e) {console.log('Error detecting changes:', _e);}
         },
         error: () => {
           this.message = 'Erro ao enviar palpite. Tente novamente.';
           this.messageType = 'error';
-          try { this.cd.detectChanges(); } catch (_e) {}
+          try { this.cd.detectChanges(); } catch (_e) {console.log('Error detecting changes:', _e);}
         },
       });
   }
@@ -218,7 +211,7 @@ export class Game implements OnInit, OnDestroy {
       const mock = this.apiService.getMockSecret?.();
       if (mock && Array.isArray(mock) && mock.length === this.numPositions) {
         this.secretCode = mock.map((c: string) => this.getLetterByColor(c));
-        try { this.cd.detectChanges(); } catch (_e) {}
+        try { this.cd.detectChanges(); } catch (_e) {console.log('Error detecting changes:', _e);}
         return;
       }
     }
@@ -233,7 +226,7 @@ export class Game implements OnInit, OnDestroy {
           } else {
             this.secretCode = [];
           }
-          try { this.cd.detectChanges(); } catch (_e) {}
+          try { this.cd.detectChanges(); } catch (_e) {console.log('Error detecting changes:', _e);}
         },
         error: () => {
           // não bloquear se erro
@@ -300,7 +293,7 @@ export class Game implements OnInit, OnDestroy {
    * Obtém as positions para ngFor
    */
   getPositions(): number[] {
-    return Array(this.numPositions).fill(0).map((_, i) => i);
+    return new Array(this.numPositions).fill(0).map((_, i) => i);
   }
 
   /**

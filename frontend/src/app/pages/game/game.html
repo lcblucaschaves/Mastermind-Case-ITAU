@@ -1,18 +1,9 @@
 ﻿<div class="mastermind-container">
-  <!-- DEBUG BUTTON - MOCK MODE TOGGLE 
-  <button class="debug-mock-button" 
-          (click)="toggleMockMode()"
-          [class.active]="mockMode"
-          title="Toggle Mock Mode para testes">
-    🎭 {{ mockMode ? 'MOCK ON' : 'MOCK OFF' }}
-  </button>-->
 
-  <!-- MASTERMIND BOARD -->
   <div class="mastermind-board">
-    <!-- TITLE -->
+
     <div class="board-title">MASTERMIND</div>
 
-    <!-- SECRET CODE ROW (TOP) -->
     <div class="secret-code-section">
       <div class="secret-code-row">
         <div class="secret-code-slot" *ngFor="let p of getPositions()">
@@ -24,9 +15,8 @@
       </div>
     </div>
 
-    <!-- ATTEMPTS CONTAINER -->
     <div class="attempts-container">
-      <!-- PREVIOUS GUESSES -->
+
       <div *ngFor="let guess of guesses; let i = index" class="attempt-row">
         <div class="attempt-label">{{ maxAttempts - i }}</div>
         <div class="attempt-positions">
@@ -41,22 +31,20 @@
         </div>
       </div>
 
-      <!-- CURRENT ATTEMPT ROW (PLAYING) -->
       <div *ngIf="gameStatus === 'playing'" class="attempt-row current-attempt">
         <div class="attempt-label current">{{ currentAttempt + 1 }}</div>
         <div class="attempt-positions">
-          <div *ngFor="let position of getPositions()" 
+          <button *ngFor="let position of getPositions()" 
                class="position-peg editable"
                [class.filled]="isPositionSelected(position)"
                [class.empty-slot]="!isPositionSelected(position)"
                (click)="clearPosition(position)">
             {{ isPositionSelected(position) ? getColorEmoji(selectedColors[position]) : '-' }}
-          </div>
+          </button>
         </div>
         <div class="attempt-feedback"></div>
       </div>
 
-      <!-- EMPTY FUTURE ATTEMPTS -->
       <div *ngFor="let row of [].constructor(maxAttempts - currentAttempt - (gameStatus === 'playing' ? 1 : 0))" class="attempt-row">
         <div class="attempt-label">-</div>
         <div class="attempt-positions">
@@ -66,7 +54,6 @@
       </div>
     </div>
 
-    <!-- COLOR SELECTOR (WHEN PLAYING) -->
     <div *ngIf="gameStatus === 'playing'" class="color-selector">
       <div class="color-buttons">
         <button *ngFor="let color of availableColors"
@@ -85,7 +72,6 @@
       </button>
     </div>
 
-    <!-- GAME OVER SCREEN -->
     <div *ngIf="gameStatus !== 'playing'" class="game-over-screen">
       <h2 *ngIf="gameStatus === 'won'" class="result-title victory">🎉 VENCEU! 🎉</h2>
       <h2 *ngIf="gameStatus === 'lost'" class="result-title defeat">😢 FIM DO JOGO 😢</h2>

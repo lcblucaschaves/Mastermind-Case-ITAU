@@ -5,7 +5,6 @@
 /* ===== VARIABLES ===== */
 $primary-color: #667eea;
 $secondary-color: #764ba2;
-$board-bg: #f5f5f5;
 $board-border: #333;
 $peg-size: 32px;
 $feedback-peg-size: 16px;
@@ -18,7 +17,7 @@ $feedback-peg-size: 16px;
   min-height: 100vh;
   padding: 12px;
   background: linear-gradient(135deg, $primary-color 0%, $secondary-color 100%);
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-family: 'Space Grotesk', sans-serif;
   overflow-y: auto;
   position: relative;
 }
@@ -59,7 +58,6 @@ $feedback-peg-size: 16px;
   gap: 0;
   width: 100%;
   max-width: 480px;
-  background: $board-bg;
   border: 4px solid $board-border;
   border-radius: 6px;
   box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
@@ -202,6 +200,9 @@ $feedback-peg-size: 16px;
   transition: all 0.2s ease;
 
   &.editable {
+    appearance: none;
+    padding: 0;
+    font: inherit;
     cursor: pointer;
 
     &:hover {
@@ -415,12 +416,12 @@ $feedback-peg-size: 16px;
   }
 
   .back-button {
-    background: #667eea;
+    background: #660099;
     color: white;
 
     &:hover {
-      background: #5568d3;
-      box-shadow: 0 4px 8px rgba(102, 126, 234, 0.3);
+      background: #3a0057;
+      box-shadow: 0 4px 8px rgba(102, 0, 153, 0.3);
     }
   }
 }
