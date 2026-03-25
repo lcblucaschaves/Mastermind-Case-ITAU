@@ -19,9 +19,15 @@ export class Dashboard implements OnInit {
   ) {}
 
   ngOnInit(): void {
+    // redirect to login if not authenticated
+    if (!this.apiService.isAuthenticated()) {
+      this.router.navigate(['/login'], { replaceUrl: true });
+      return;
+    }
+
     const user = localStorage.getItem('user');
     if (!user) {
-      this.router.navigate(['/login']);
+      this.userEmail = 'Jogador';
       return;
     }
     try {
@@ -44,12 +50,12 @@ export class Dashboard implements OnInit {
     this.apiService.logout().subscribe({
       next: () => {
         localStorage.removeItem('user');
-        this.router.navigate(['/login']);
+        this.router.navigate(['/login'], { replaceUrl: true });
       },
       error: () => {
         // even if logout request fails, clear local user data and redirect
         localStorage.removeItem('user');
-        this.router.navigate(['/login']);
+        this.router.navigate(['/login'], { replaceUrl: true });
       }
     });
   }

@@ -26,6 +26,12 @@ export class Ranking implements OnInit, OnDestroy {
 
 
   ngOnInit(): void {
+    // prevent access if not authenticated
+    if (!this.apiService.isAuthenticated()) {
+      this.router.navigate(['/login'], { replaceUrl: true });
+      return;
+    }
+
     this.loadRanking();
   }
 
@@ -77,11 +83,11 @@ export class Ranking implements OnInit, OnDestroy {
     this.apiService.logout().pipe(takeUntil(this.destroy$)).subscribe({
       next: () => {
         localStorage.removeItem('user');
-        this.router.navigate(['/login']);
+        this.router.navigate(['/login'], { replaceUrl: true });
       },
       error: () => {
         localStorage.removeItem('user');
-        this.router.navigate(['/login']);
+        this.router.navigate(['/login'], { replaceUrl: true });
       }
     });
   }

@@ -54,6 +54,12 @@ export class Game implements OnInit, OnDestroy {
   ) {}
 
   ngOnInit(): void {
+    // prevent access if not authenticated
+    if (!this.apiService.isAuthenticated()) {
+      this.router.navigate(['/login'], { replaceUrl: true });
+      return;
+    }
+
     this.mockMode = this.apiService.isMockMode();
     this.startGame();
   }
@@ -175,8 +181,16 @@ export class Game implements OnInit, OnDestroy {
    * Volta para o login
    */
   logout(): void {
-    localStorage.removeItem('user');
-    this.router.navigate(['/login']);
+    this.apiService.logout().pipe(takeUntil(this.destroy$)).subscribe({
+      next: () => {
+        localStorage.removeItem('user');
+        this.router.navigate(['/login'], { replaceUrl: true });
+      },
+      error: () => {
+        localStorage.removeItem('user');
+        this.router.navigate(['/login'], { replaceUrl: true });
+      }
+    });
   }
 
   /**

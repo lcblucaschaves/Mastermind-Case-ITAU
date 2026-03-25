@@ -19,6 +19,8 @@ export class Login implements OnInit, OnDestroy {
   successMessage = '';
   errorMessage = '';
   isRegisterMode = false;
+  loginCompleted = false;
+  registerCompleted = false;
   private readonly destroy$ = new Subject<void>();
 
   constructor(
@@ -94,6 +96,8 @@ export class Login implements OnInit, OnDestroy {
     this.successMessage = '';
     this.errorMessage = '';
     this.isLoading = false;
+    this.loginCompleted = false;
+    this.registerCompleted = false;
 
     if (isRegister) {
       this.loginForm.reset();
@@ -140,6 +144,7 @@ export class Login implements OnInit, OnDestroy {
           localStorage.setItem('userEmail', loginData.email);
           
           this.successMessage = `✅ Login realizado com sucesso! Bem-vindo!`;
+          this.loginCompleted = true;
           this.isLoading = false;
           this.cdr.detectChanges();
           
@@ -198,6 +203,7 @@ export class Login implements OnInit, OnDestroy {
           localStorage.setItem('userEmail', email);
           
           this.successMessage = `✅ Conta criada com sucesso! Bem-vindo ao Mastermind!`;
+          this.registerCompleted = true;
           this.isLoading = false;
           this.cdr.detectChanges();
           

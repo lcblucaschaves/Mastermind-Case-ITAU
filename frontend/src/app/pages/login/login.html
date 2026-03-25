@@ -90,9 +90,6 @@
               class="form-input"
               [class.input-error]="isFieldInvalid('password', loginForm)"
             />
-            <span class="error-message" *ngIf="isFieldInvalid('password', loginForm)">
-              Senha é obrigatória (mínimo 6 caracteres)
-            </span>
           </div>
 
           <!-- Mensagem de Sucesso/Erro (Login) -->
@@ -107,7 +104,7 @@
           <button
             type="submit"
             class="btn-login"
-            [disabled]="loginForm.invalid || isLoading"
+            [disabled]="isLoading || loginCompleted"
           >
             <span *ngIf="!isLoading">Entrar no Jogo</span>
             <span *ngIf="isLoading" class="loading-spinner">Entrando...</span>
@@ -181,7 +178,7 @@
           <button
             type="submit"
             class="btn-login"
-            [disabled]="registerForm.invalid || isLoading"
+            [disabled]="registerForm.invalid || isLoading || registerCompleted"
           >
             <span *ngIf="!isLoading">Criar Conta</span>
             <span *ngIf="isLoading" class="loading-spinner">Criando...</span>
