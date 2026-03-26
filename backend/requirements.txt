@@ -8,4 +8,5 @@ passlib[bcrypt]
 
 # Dependências de teste
 pytest
+pytest-cov
 httpx
